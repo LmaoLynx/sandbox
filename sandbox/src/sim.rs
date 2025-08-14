@@ -194,7 +194,7 @@ fn do_pitch(world: &World, game: &Game, rng: &mut Rng) -> PitchOutcome {
 
     let is_flinching = game.strikes == 0 && batter.mods.has(Mod::Flinch);
 
-    let multiplier_data = &game.compute_multiplier_data(world);
+    let multiplier_data = &game.multiplier_data;
 
     let is_strike = rng.next() < formulas::strike_threshold(pitcher, batter, is_flinching, ruleset, multiplier_data);
     let does_swing = if !is_flinching {
@@ -240,7 +240,7 @@ fn do_pitch(world: &World, game: &Game, rng: &mut Rng) -> PitchOutcome {
             }
             for baserunner in game.runners.iter() {
                 let base_from = baserunner.base;
-                let runner_id = baserunner.id.clone();
+                let runner_id = baserunner.id;
                 let runner = world.player(runner_id);
 
                 if rng.next() < formulas::flyout_advancement_threshold(runner, base_from, ruleset, multiplier_data) {

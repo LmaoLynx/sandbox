@@ -755,6 +755,7 @@ impl Event {
                 }
             }
         }
+        game.update_multiplier_data(world);
     }
 
     //todo: might merge this with a possible future print function

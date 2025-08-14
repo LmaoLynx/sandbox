@@ -13,7 +13,7 @@ pub mod rng;
 pub mod sim;
 pub mod events;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Weather {
     Sun,
     Eclipse,
@@ -81,7 +81,7 @@ impl Weather {
         for i in 0..weights.len() {
             let weight = weights[i];
             slider += weight;
-            let weather = weathers[i].clone();
+            let weather = weathers[i];
             if roll < slider {
                 return weather;
             }
@@ -104,6 +104,7 @@ pub struct Game {
     pub polarity: bool, //false for positive, true for negative
     pub scoring_plays_inning: u8,
     pub salmon_resets_inning: i16,
+    pub multiplier_data: MultiplierData,
 
     pub events: Events,
     pub started: bool,
@@ -133,6 +134,7 @@ pub struct GameTeam {
 }
 
 //stealing this from Astrid
+#[derive(Clone, Debug)]
 pub struct MultiplierData {
     batting_team_mods: Mods,
     pitching_team_mods: Mods,
@@ -151,9 +153,10 @@ pub struct MultiplierData {
 // like have `tick` not actually make any changes to the game state but instead apply that based on the EventData
 impl Game {
     pub fn new(team_a: Uuid, team_b: Uuid, day: usize, weather_override: Option<Weather>, world: &World, rng: &mut Rng) -> Game {
+        let weather = if weather_override.is_some() { weather_override.unwrap() } else { Weather::generate(rng, world.season_ruleset, day) };
         Game {
             id: Uuid::new_v4(),
-            weather: if weather_override.is_some() { weather_override.unwrap() } else { Weather::generate(rng, world.season_ruleset, day) },
+            weather,
             day,
             inning: 1,
             balls: 0,
@@ -163,6 +166,18 @@ impl Game {
             scoring_plays_inning: 0,
             salmon_resets_inning: 0,
             events: Events::new(),
+            multiplier_data: MultiplierData {
+                //someone who knows about lifetimes more than me can probably
+                //make this code more efficient
+                batting_team_mods: world.team(team_b).mods.clone(),
+                pitching_team_mods: world.team(team_a).mods.clone(), 
+                weather,
+                day,
+                runners_empty: true, //self.runners.empty(),
+                top: true, //self.scoreboard.top,
+                maximum_blaseball: false, //self.runners.iter().count() == 3, //todo: kid named fifth base
+                at_bats: 0, //todo
+            },
             started: false,
             scoreboard: Scoreboard {
                 home_team: GameTeam {
@@ -323,19 +338,33 @@ impl Game {
         self.scoreboard.pitching_team_mut().pitcher = new;
     }
 
-    pub fn compute_multiplier_data(&self, world: &World) -> MultiplierData {
-        MultiplierData {
-            //someone who knows about lifetimes more than me can probably
-            //make this code more efficient
-            batting_team_mods: world.team(self.scoreboard.batting_team().id).mods.clone(),
-            pitching_team_mods: world.team(self.scoreboard.pitching_team().id).mods.clone(), 
-            weather: self.weather.clone(),
-            day: self.day,
-            runners_empty: self.runners.empty(),
-            top: self.scoreboard.top,
-            maximum_blaseball: self.runners.iter().count() == 3, //todo: kid named fifth base
-            at_bats: 0, //todo
+    /*pub fn batting_team_mods(&self) -> &Mods {
+        if self.scoreboard.top {
+            self.multiplier_data.away_team_mods
+        } else {
+            self.multiplier_data.home_team_mods
         }
+    }
+
+    pub fn pitching_team_mods(&self) -> &Mods {
+        if self.scoreboard.top {
+            self.multiplier_data.home_team_mods
+        } else {
+            self.multiplier_data.away_team_mods
+        }
+    }*/
+
+    pub fn update_multiplier_data(&mut self, world: &World) {
+        if self.multiplier_data.top != self.scoreboard.top {
+            self.multiplier_data.top = self.scoreboard.top;
+            self.multiplier_data.batting_team_mods = world.team(self.scoreboard.pitching_team().id).mods.clone();
+            self.multiplier_data.pitching_team_mods = world.team(self.scoreboard.batting_team().id).mods.clone();
+        } else {
+            self.multiplier_data.batting_team_mods = world.team(self.scoreboard.batting_team().id).mods.clone();
+            self.multiplier_data.pitching_team_mods = world.team(self.scoreboard.pitching_team().id).mods.clone();
+        }
+        self.multiplier_data.runners_empty = self.runners.empty();
+        self.multiplier_data.maximum_blaseball = self.runners.iter().count() == 3; //todo: kid named fifth base
     }
 }
 
