@@ -190,6 +190,7 @@ impl Event {
         game.events.add(repr.clone());
         match *self {
             Event::BatterUp { batter } => {
+                println!("{:?}", world.player(batter).mods);
                 let bt = game.scoreboard.batting_team_mut();
                 bt.batter = Some(batter);
                 if !game.started { game.started = true };
@@ -337,6 +338,7 @@ impl Event {
                     game.scoreboard.batting_team_mut().score += 0.2;
                 }
                 game.runners.advance(base_from);
+                game.score(world);
                 game.base_sweep();
             }
             Event::CaughtStealing {
@@ -719,6 +721,12 @@ impl Event {
                 if away { world.player_mut(game.scoreboard.away_team.pitcher).mods.remove(Mod::TripleThreat); }
             },
             Event::Swept { ref elsewhere } => {
+                let runners = game.runners.clone();
+                for runner in runners.iter() {
+                    if world.player(runner.id).mods.has(Mod::Flippers) {
+                        game.scoreboard.batting_team_mut().score += world.player(runner.id).get_run_value() + 1.0;
+                    }
+                }
                 game.runners.clear();
                 for &runner in elsewhere {
                     println!("{} at {}, day {}", world.team(game.scoreboard.away_team.id).name, world.team(game.scoreboard.home_team.id).name, game.day);

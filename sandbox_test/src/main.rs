@@ -96,7 +96,7 @@ fn main() {
     //edit mods and legendary items
     //world.team_name_mut(String::from("Hawai'i Fridays")).mods.add(Mod::FourthStrike, ModLifetime::Season);
     //world.team_name_mut(String::from("Hades Tigers")).mods.add(Mod::HomeFieldAdvantage, ModLifetime::Season);
-    //world.player_mut(world.team_name(String::from("Kansas City Breath Mints")).lineup[2]).mods.add(Mod::Squiddish, ModLifetime::Permanent);
+    //world.player_mut(world.team_name(String::from("Kansas City Breath Mints")).lineup[2]).mods.add(Mod::Flippers, ModLifetime::Permanent);
     //world.player_mut(world.team(team_a).lineup[0]).add_legendary_item(LegendaryItem::TheIffeyJr);
     //world.player_mut(world.team_name(String::from("Charleston Shoe Thieves")).rotation[0]).mods.add(Mod::Superyummy, ModLifetime::Permanent);
     
@@ -362,12 +362,15 @@ fn main() {
             println!("{}", id);
             sim.world.player_mut(id).team = None;
             sim.world.hall.push(id);*/
-            let team_a = sim.rng.index(args.teams);
-            let mut team_b = sim.rng.index(args.teams - 1);
-            if team_b >= team_a {
-                team_b += 1;
+            let idx_a = sim.rng.index(args.teams);
+            let mut idx_b = sim.rng.index(args.teams - 1);
+            if idx_b >= idx_a {
+                idx_b += 1;
             }
-            let mut game = Game::new(divisions[team_a], divisions[team_b], 0, Some(Weather::Coffee), sim.world, sim.rng); 
+            let team_a = divisions[idx_a];
+            let team_b = divisions[idx_b];
+            sim.world.player_mut(world.team(team_a).lineup[0]).mods.add(Mod::Flippers, ModLifetime::Permanent);
+            let mut game = Game::new(team_a, team_b, 0, Some(Weather::Flooding), sim.world, sim.rng); 
             println!("{} at {}, {:?}",
                 sim.world.team(game.scoreboard.away_team.id).name,
                 sim.world.team(game.scoreboard.home_team.id).name,

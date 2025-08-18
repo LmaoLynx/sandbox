@@ -65,7 +65,8 @@ pub enum Mod {
     TripleThreat,
     Perk,
     Elsewhere,
-    Scattered
+    Scattered,
+    Flippers
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
