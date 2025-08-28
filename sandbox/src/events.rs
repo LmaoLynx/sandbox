@@ -190,7 +190,7 @@ impl Event {
         game.events.add(repr.clone());
         match *self {
             Event::BatterUp { batter } => {
-                println!("{:?}", world.player(batter).mods);
+                //println!("{:?}", world.player(batter).mods);
                 let bt = game.scoreboard.batting_team_mut();
                 bt.batter = Some(batter);
                 if !game.started { game.started = true };

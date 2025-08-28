@@ -976,15 +976,21 @@ impl Plugin for PregamePlugin {
             
             let perk = poll_for_mod(game, world, Mod::Perk, "current");
             if perk.len() > 0 {
-                if let Weather::Coffee = game.weather {
-                    overperforming = [overperforming, perk].concat();
-                } else if let Weather::Coffee2 = game.weather {
-                    overperforming = [overperforming, perk].concat();
-                } else if let Weather::Coffee3 = game.weather {
-                    overperforming = [overperforming, perk].concat();
+                match game.weather {
+                    Weather::Coffee | Weather::Coffee2 | Weather::Coffee3 => {
+                        overperforming = [overperforming, perk].concat();
+                    },
+                    _ => {}
                 }
             }
-
+            
+            if game.day < 27 {
+                let earlbirds = poll_for_mod(game, world, Mod::Earlbirds, "current");
+                if earlbirds.len() > 0 {
+                    overperforming = [overperforming, earlbirds].concat();
+                }
+            }
+                
             //other performing code here
             if !activated("Performing") && (overperforming.len() > 0 || underperforming.len() > 0) {
                 Some(Event::Performing { overperforming, underperforming })

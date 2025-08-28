@@ -66,7 +66,8 @@ pub enum Mod {
     Perk,
     Elsewhere,
     Scattered,
-    Flippers
+    Flippers,
+    Earlbirds
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

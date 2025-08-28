@@ -369,8 +369,8 @@ fn main() {
             }
             let team_a = divisions[idx_a];
             let team_b = divisions[idx_b];
-            sim.world.player_mut(world.team(team_a).lineup[0]).mods.add(Mod::Flippers, ModLifetime::Permanent);
-            let mut game = Game::new(team_a, team_b, 0, Some(Weather::Flooding), sim.world, sim.rng); 
+            //sim.world.player_mut(world.team(team_a).rotation[0]).mods.add(Mod::Earlbirds, ModLifetime::Permanent);
+            let mut game = Game::new(team_a, team_b, 0, None, sim.world, sim.rng); 
             println!("{} at {}, {:?}",
                 sim.world.team(game.scoreboard.away_team.id).name,
                 sim.world.team(game.scoreboard.home_team.id).name,
