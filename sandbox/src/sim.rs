@@ -461,7 +461,7 @@ impl Plugin for StealingPlugin {
 }
 
 //exclusion: "all", "current", "playing"
-fn poll_for_mod(game: &Game, world: &World, a_mod: Mod, exclusion: &str) -> Vec<Uuid> {
+fn poll_for_mod(game: &Game, world: &World, a_mod: Mod, exclusion: &str, team: bool) -> Vec<Uuid> {
     let home_team = &game.scoreboard.home_team;
     let away_team = &game.scoreboard.away_team;
 
@@ -489,7 +489,12 @@ fn poll_for_mod(game: &Game, world: &World, a_mod: Mod, exclusion: &str) -> Vec<
 
     let mut players = vec![home_lineup, home_pitcher, away_lineup, away_pitcher].concat();
 
-    players.retain(|player| world.player(*player).mods.has(a_mod));
+    if team {
+        //todo: this crashes on a teamless player. unclear if this ever happens
+        players.retain(|player| world.team(world.player(*player).team.unwrap()).mods.has(a_mod));
+    } else {
+        players.retain(|player| world.player(*player).mods.has(a_mod));
+    }
 
     players
 }
@@ -503,7 +508,7 @@ impl Plugin for WeatherPlugin {
             Weather::Sun => None,
             Weather::Eclipse => {
                 //todo: add fortification
-                let fire_eaters = poll_for_mod(game, world, Mod::FireEater, "playing");
+                let fire_eaters = poll_for_mod(game, world, Mod::FireEater, "playing", false);
                 let incin_roll = rng.next();
                 //todo: the Fire Eater picker prioritizes unstable players
                 if fire_eaters.len() > 0 {
@@ -520,7 +525,7 @@ impl Plugin for WeatherPlugin {
                     if world.player(target).mods.has(Mod::Fireproof) || world.team(world.player(target).team.unwrap()).mods.has(Mod::Fireproof) {
                         return Some(Event::Fireproof { target });
                     }
-                    let minimized = poll_for_mod(game, world, Mod::Minimized, "all");
+                    let minimized = poll_for_mod(game, world, Mod::Minimized, "all", false);
                     if minimized.len() > 0 {
                         if minimized.len() > 1 { 
                             //assuming that there's
@@ -583,7 +588,7 @@ impl Plugin for WeatherPlugin {
                     return Some(Event::Birds);
                 } //todo: this is definitely not rng accurate
                 
-                let shelled_players = poll_for_mod(game, world, Mod::Shelled, "all");
+                let shelled_players = poll_for_mod(game, world, Mod::Shelled, "all", false);
                 for player in shelled_players {
                     //estimate, not sure how accurate this is
                     let shelled_roll = rng.next();
@@ -708,7 +713,7 @@ impl Plugin for WeatherPlugin {
                     0.00125 - 0.00125 * fort
                 };
                 let siphon_threshold = 0.0025;
-                let siphons = poll_for_mod(game, world, Mod::Siphon, "playing");
+                let siphons = poll_for_mod(game, world, Mod::Siphon, "playing", false);
                 let drain_roll = rng.next();
                 if drain_roll < drain_threshold || siphons.len() > 0 && drain_roll < siphon_threshold { //rulesets
                     let mut drainer: Uuid;
@@ -965,7 +970,7 @@ impl Plugin for PregamePlugin {
             let mut overperforming = vec![];
             let mut underperforming = vec![];
             //todo: make this a separate event
-            let superyummy = poll_for_mod(game, world, Mod::Superyummy, "current");
+            let superyummy = poll_for_mod(game, world, Mod::Superyummy, "current", false);
             if superyummy.len() > 0 {
                 if let Weather::Peanuts = game.weather {
                     overperforming = [overperforming, superyummy].concat();
@@ -974,7 +979,7 @@ impl Plugin for PregamePlugin {
                 }
             }
             
-            let perk = poll_for_mod(game, world, Mod::Perk, "current");
+            let perk = poll_for_mod(game, world, Mod::Perk, "current", false);
             if perk.len() > 0 {
                 match game.weather {
                     Weather::Coffee | Weather::Coffee2 | Weather::Coffee3 => {
@@ -985,9 +990,16 @@ impl Plugin for PregamePlugin {
             }
             
             if game.day < 27 {
-                let earlbirds = poll_for_mod(game, world, Mod::Earlbirds, "current");
+                let earlbirds = poll_for_mod(game, world, Mod::Earlbirds, "current", true);
                 if earlbirds.len() > 0 {
                     overperforming = [overperforming, earlbirds].concat();
+                }
+            }
+
+            if game.day > 71 && game.day < 99 {
+                let lateparty = poll_for_mod(game, world, Mod::LateToTheParty, "current", true);
+                if lateparty.len() > 0 {
+                    overperforming = [overperforming, lateparty].concat();
                 }
             }
                 
