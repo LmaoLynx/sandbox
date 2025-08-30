@@ -68,7 +68,9 @@ pub enum Mod {
     Scattered,
     Flippers,
     Earlbirds,
-    LateToTheParty
+    LateToTheParty,
+    Roaming,
+    HardBoiled
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
