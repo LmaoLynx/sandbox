@@ -520,8 +520,8 @@ impl Plugin for WeatherPlugin {
                 }
                 let target = game.pick_player_weighted(world, rng.next(), |&uuid| !game.runners.contains(uuid), true);
                 let unstable_check = world.player(target).mods.has(Mod::Unstable) && incin_roll < 0.002; //estimate
-                let regular_check = incin_roll < 0.00045 - 0.0004 * fort;
-                if unstable_check || regular_check { //estimate
+                let regular_check = incin_roll < 0.045 - 0.0004 * fort;
+                if unstable_check || regular_check {
                     if world.player(target).mods.has(Mod::Fireproof) || world.team(world.player(target).team.unwrap()).mods.has(Mod::Fireproof) {
                         return Some(Event::Fireproof { target });
                     }
@@ -538,6 +538,8 @@ impl Plugin for WeatherPlugin {
                             }
                         }
                     }
+                    //todo: what order does ambush roll in
+                    let ambush_active: (bool, bool) = (world.team(game.scoreboard.home_team.id).mods.has(Mod::Ambush), world.team(game.scoreboard.away_team.id).mods.has(Mod::Ambush));
                     let chain: Option<Uuid> = None;
                     if unstable_check {
                         let chain_target = game.pick_player_weighted(world, rng.next(), |&uuid| world.player(uuid).team.unwrap() != world.player(target).team.unwrap(), false);
@@ -548,10 +550,15 @@ impl Plugin for WeatherPlugin {
                     } else {
                         Player::new(rng)
                     };
+                    let ambush = (
+                        if ambush_active.0 { Some(world.random_hall_player(rng)) } else { None },
+                        if ambush_active.1 { Some(world.random_hall_player(rng)) } else { None }
+                    );
                     Some(Event::Incineration { 
                         target,
                         replacement,
-                        chain
+                        chain,
+                        ambush
                     })
                 } else {
                     None

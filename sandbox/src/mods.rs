@@ -74,7 +74,8 @@ pub enum Mod {
     LateToTheParty,
     #[strum(serialize="WANDERER")]
     Roaming,
-    HardBoiled
+    HardBoiled,
+    Ambush
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

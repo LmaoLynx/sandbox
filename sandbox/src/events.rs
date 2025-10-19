@@ -59,7 +59,8 @@ pub enum Event {
     Incineration {
         target: Uuid,
         replacement: Player,
-        chain: Option<Uuid>
+        chain: Option<Uuid>,
+        ambush: (Option<Uuid>, Option<Uuid>)
     },
     Peanut {
         target: Uuid,
@@ -354,7 +355,7 @@ impl Event {
             } => {
                 world.player_mut(target).boost(boosts);
             },
-            Event::Incineration { target, ref replacement, chain } => {
+            Event::Incineration { target, ref replacement, chain, ambush } => {
                 println!("{} at {}, day {}", world.team(game.scoreboard.away_team.id).name, world.team(game.scoreboard.home_team.id).name, game.day);
                 println!("Incineration: {}", world.player(target).name);
                 println!("Team: {}", world.team(world.player(target).team.unwrap()).name);
@@ -377,6 +378,18 @@ impl Event {
                     world.replace_player(target, replacement_id);
                 } else {
                     world.swap_hall(target, replacement_id);
+                }
+                if ambush.0.is_some() {
+                    let ambush_target = ambush.0.unwrap();
+                    world.hall.retain(|&id| id != ambush_target);
+                    world.team_mut(game.scoreboard.home_team.id).shadows.push(ambush_target);
+                    world.player_mut(ambush_target).team = Some(game.scoreboard.home_team.id);
+                }
+                if ambush.1.is_some() {
+                    let ambush_target = ambush.1.unwrap();
+                    world.hall.retain(|&id| id != ambush_target);
+                    world.team_mut(game.scoreboard.away_team.id).shadows.push(ambush_target);
+                    world.player_mut(ambush_target).team = Some(game.scoreboard.away_team.id);
                 }
                 if chain.is_some() {
                     world.player_mut(chain.unwrap()).mods.add(Mod::Unstable, ModLifetime::Week);
