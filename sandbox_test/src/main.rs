@@ -25,11 +25,11 @@ struct Args {
     s2: u64,
     #[arg(long, action)]
     prefill: bool,
-    #[arg(long, default_value_t=11)]
+    #[arg(long, default_value_t=12)]
     season: u8,
-    #[arg(long, default_value_t=20)]
+    #[arg(long, default_value_t=24)]
     teams: usize,
-    #[arg(long, default_value_t=5)]
+    #[arg(long, default_value_t=6)]
     divsize: usize,
     #[arg(long, action)]
     seasonmode: bool,
