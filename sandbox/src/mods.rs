@@ -16,6 +16,7 @@ pub enum Mod {
     LifeOfTheParty,
     Gravity,
     NightVision,
+    #[strum(serialize="EXTRA_STRIKE")]
     FourthStrike,
     #[strum(serialize="DEBT_THREE")]
     DebtU,
@@ -24,6 +25,7 @@ pub enum Mod {
     Superallergic,
     Spicy,
     HeatingUp,
+    #[strum(serialize="ON_FIRE")]
     RedHot,
     Minimized,
     Electric,
@@ -66,9 +68,11 @@ pub enum Mod {
     Perk,
     Elsewhere,
     Scattered,
+    #[strum(serialize="SWIM_BLADDER")]
     Flippers,
     Earlbirds,
     LateToTheParty,
+    #[strum(serialize="WANDERER")]
     Roaming,
     HardBoiled
 }
