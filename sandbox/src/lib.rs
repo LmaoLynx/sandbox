@@ -49,12 +49,16 @@ impl Weather {
                     vec![50, 20, 20, 35, 20, 20, 20, 50, 2, 2, 1, 200]
                 }
             },
+            12 => {
+                vec![199, 133, 47, 132, 141, 60, 72, 180, 6, 7, 15, 196]
+            }
             _ => todo!(),
         };
         let weight_sum = match season_ruleset {
             11 => {
                 if day < 72 { 240 } else { 440 }
             }
+            12 => 1188,
             _ => todo!(),
         };
         let weathers = [
