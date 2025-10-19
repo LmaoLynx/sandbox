@@ -76,6 +76,7 @@ pub enum Mod {
     Roaming,
     HardBoiled,
     Undersea,
+    BottomDweller,
     Ambush
 }
 

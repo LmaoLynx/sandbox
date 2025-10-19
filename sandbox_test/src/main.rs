@@ -6,12 +6,13 @@ use sandbox::{
     entities::{LegendaryItem, NameGen, World},
     events::Event,
     rng::Rng,
-    sim::Sim,
+    sim::{Sim, roll_random_boosts},
     mods::{Mod, ModLifetime},
     Game, Weather
 };
 use uuid::Uuid;
 use clap::Parser;
+use std::cmp::Ordering;
 
 mod schedule;
 mod postseason;
@@ -163,7 +164,17 @@ fn main() {
                     let team = sim.world.team(t);
                     party_standings.push(team.losses);
                 }
-                postseason::update_party(&divisions, &party_standings, &fates, day, sim.world, sim.rng);
+                //indices of teams in the division Vec
+                let mut indices: Vec<usize> = (0..team_number).collect();
+                
+                indices.sort_by(|&a, &b| {
+                    if let Ordering::Equal = party_standings[a].cmp(&party_standings[b]) {
+                        fates[a].cmp(&fates[b])
+                    } else {
+                        party_standings[a].cmp(&party_standings[b])
+                    }
+                });
+                postseason::update_party(&divisions, &indices, day, sim.world, sim.rng);
             }
 
             //do standings and fates need to be a vec actually
@@ -175,7 +186,42 @@ fn main() {
                 println!("{}: {}-{}", team.name, team.wins, team.losses);
             }
 
-            let (mut playoff_seeds1, mut playoff_seeds2) = postseason::generate_seeding(&divisions, &standings, &fates, sim.rng);
+            //indices of teams in the division Vec
+            let mut indices: Vec<usize> = (0..team_number).collect();
+            indices.sort_by(|&a, &b| {
+                if let Ordering::Equal = standings[b].cmp(&standings[a]) {
+                    fates[a].cmp(&fates[b])
+                } else {
+                    standings[b].cmp(&standings[a])
+                }
+            });
+            
+            let mut bottom_dwellers: Vec<Uuid> = Vec::with_capacity(4);
+            for d in 0..4 {
+                let bottom_index = indices.iter().rev().find(|&&i| i >= div_size * d && i < div_size * (d + 1)).unwrap();
+                bottom_dwellers.push(divisions[*bottom_index]);
+            }
+            for bd in bottom_dwellers {
+                let mut team = sim.world.team_mut(bd);
+                if team.mods.has(Mod::BottomDweller) {
+                    println!("Bottom Dwellers: {}", team.name);
+                    //todo: how does this work, does it apply to shadows
+                    for player in team.lineup.iter_mut() {
+                        //todo: IMPORTANT! boosts are supposed to be in a certain order. that is
+                        //not implemented yet.
+                        world.player_mut(*player).boost(&roll_random_boosts(sim.rng, 0.01, 0.04, true));
+                    }
+                    for player in team.rotation.iter_mut() {
+                        world.player_mut(*player).boost(&roll_random_boosts(sim.rng, 0.01, 0.04, true));
+                    }
+                    for player in team.shadows.iter_mut() {
+                        world.player_mut(*player).boost(&roll_random_boosts(sim.rng, 0.01, 0.04, true));
+                    }
+                }
+            }
+                
+
+            let (mut playoff_seeds1, mut playoff_seeds2) = postseason::generate_seeding(&divisions, &indices, sim.rng);
 
             for team in playoff_seeds1.iter() {
                 println!("{}", sim.world.team(*team).name);

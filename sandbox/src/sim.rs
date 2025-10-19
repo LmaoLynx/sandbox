@@ -856,7 +856,7 @@ impl Plugin for WeatherPlugin {
     }
 }
 
-fn roll_random_boosts(rng: &mut Rng, base: f64, threshold: f64, exclude_press: bool) -> Vec<f64> {
+pub fn roll_random_boosts(rng: &mut Rng, base: f64, threshold: f64, exclude_press: bool) -> Vec<f64> {
     let mut boosts: Vec<f64> = Vec::new();
     //does Tangled decrease press or cinn???
     let stat_number = if exclude_press { 25 } else { 26 };
