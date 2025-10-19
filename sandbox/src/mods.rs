@@ -75,6 +75,7 @@ pub enum Mod {
     #[strum(serialize="WANDERER")]
     Roaming,
     HardBoiled,
+    Undersea,
     Ambush
 }
 

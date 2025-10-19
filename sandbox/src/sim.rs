@@ -520,7 +520,7 @@ impl Plugin for WeatherPlugin {
                 }
                 let target = game.pick_player_weighted(world, rng.next(), |&uuid| !game.runners.contains(uuid), true);
                 let unstable_check = world.player(target).mods.has(Mod::Unstable) && incin_roll < 0.002; //estimate
-                let regular_check = incin_roll < 0.045 - 0.0004 * fort;
+                let regular_check = incin_roll < 0.00045 - 0.0004 * fort;
                 if unstable_check || regular_check {
                     if world.player(target).mods.has(Mod::Fireproof) || world.team(world.player(target).team.unwrap()).mods.has(Mod::Fireproof) {
                         return Some(Event::Fireproof { target });
@@ -967,8 +967,18 @@ impl Plugin for ModPlugin {
 struct PregamePlugin;
 impl Plugin for PregamePlugin {
     fn tick(&self, game: &Game, world: &World, rng: &mut Rng) -> Option<Event> {
+        let activated = |event: &str| game.events.has(String::from(event), -1);
+        let undersea_home = world.team(game.scoreboard.home_team.id).mods.has(Mod::Undersea) && game.scoreboard.home_team.score < 0.0;
+        let undersea_away = world.team(game.scoreboard.away_team.id).mods.has(Mod::Undersea) && game.scoreboard.away_team.score < 0.0;
+        //todo: ok but do we REALLY have to do this. do we REALLY have to.
+        //or is the event lookup system just that broken
+        if !activated("UnderseaHome") && undersea_home {
+            return Some(Event::UnderseaHome)
+        }
+        if !activated("UnderseaAway") && undersea_away {
+            return Some(Event::UnderseaAway)
+        }
         if !game.started {
-            let activated = |event: &str| game.events.has(String::from(event), -1);
             if let Weather::Coffee3 = game.weather {
                 if !activated("TripleThreat") {
                     return Some(Event::TripleThreat);

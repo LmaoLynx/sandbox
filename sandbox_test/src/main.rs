@@ -75,14 +75,17 @@ fn main() {
         if prefill {
             divisions(args.season).unwrap().convert()
         } else {
-            /*vec!["Baltimore Crabs", "Breckenridge Jazz Hands", "Chicago Firefighters", "Hades Tigers", "Mexico City Wild Wings",
-            "Boston Flowers", "Hellmouth Sunbeams", "Houston Spies", "Miami Dale", "Unlimited Tacos",
-            "Dallas Steaks", "New York Millennials", "Philly Pies", "San Francisco Lovers", "Seattle Garages", 
-            "Canada Moist Talkers", "Charleston Shoe Thieves", "Hawai'i Fridays", "Kansas City Breath Mints", "Yellowstone Magic"]*/
-            vec!["Atlantis Georgias", "Breckenridge Jazz Hands", "Chicago Firefighters", "Hades Tigers", "Mexico City Wild Wings", "Tokyo Lift",
-            "Boston Flowers", "Hellmouth Sunbeams", "Houston Spies", "Miami Dale", "Ohio Worms", "Unlimited Tacos",
-            "Core Mechanics", "Dallas Steaks", "New York Millennials", "Philly Pies", "San Francisco Lovers", "Seattle Garages", 
-            "Baltimore Crabs", "Canada Moist Talkers", "Charleston Shoe Thieves", "Hawai'i Fridays", "Kansas City Breath Mints", "Yellowstone Magic"]
+            (if args.season == 11 { 
+                vec!["Baltimore Crabs", "Breckenridge Jazz Hands", "Chicago Firefighters", "Hades Tigers", "Mexico City Wild Wings",
+                "Boston Flowers", "Hellmouth Sunbeams", "Houston Spies", "Miami Dale", "Unlimited Tacos",
+                "Dallas Steaks", "New York Millennials", "Philly Pies", "San Francisco Lovers", "Seattle Garages", 
+                "Canada Moist Talkers", "Charleston Shoe Thieves", "Hawai'i Fridays", "Kansas City Breath Mints", "Yellowstone Magic"]
+            } else {
+                vec!["Atlantis Georgias", "Breckenridge Jazz Hands", "Chicago Firefighters", "Hades Tigers", "Mexico City Wild Wings", "Tokyo Lift",
+                "Boston Flowers", "Hellmouth Sunbeams", "Houston Spies", "Miami Dale", "Ohio Worms", "Unlimited Tacos",
+                "Core Mechanics", "Dallas Steaks", "New York Millennials", "Philly Pies", "San Francisco Lovers", "Seattle Garages", 
+                "Baltimore Crabs", "Canada Moist Talkers", "Charleston Shoe Thieves", "Hawai'i Fridays", "Kansas City Breath Mints", "Yellowstone Magic"]
+            })
                 .iter()
                 .map(|s| teams[team_names.binary_search(s).unwrap_or_else(|_| panic!("team not found: {s}"))])
                 .collect()
@@ -95,12 +98,12 @@ fn main() {
 
     //edit mods and legendary items
     //world.team_name_mut(String::from("Hawai'i Fridays")).mods.add(Mod::FourthStrike, ModLifetime::Season);
-    //world.team_name_mut(String::from("Hades Tigers")).mods.add(Mod::HomeFieldAdvantage, ModLifetime::Season);
+    //world.team_name_mut(String::from("Atlantis Georgias")).mods.add(Mod::Undersea, ModLifetime::Season);
     //world.player_mut(world.team_name(String::from("Kansas City Breath Mints")).lineup[2]).mods.add(Mod::Flippers, ModLifetime::Permanent);
     //world.player_mut(world.team(team_a).lineup[0]).add_legendary_item(LegendaryItem::TheIffeyJr);
     //world.player_mut(world.team_name(String::from("Charleston Shoe Thieves")).rotation[0]).mods.add(Mod::Superyummy, ModLifetime::Permanent);
     
-    let mut fate_vec: Vec<Uuid> = if prefill { tiebreakers(11).unwrap() } else { Vec::new() };
+    let mut fate_vec: Vec<Uuid> = if prefill { tiebreakers(args.season).unwrap() } else { Vec::new() };
     let mut fate_pool: Vec<usize> = (0..team_number).collect();
     let mut fates: Vec<usize> = Vec::new();
     for i in 0..team_number {
@@ -358,19 +361,19 @@ fn main() {
             sim.world.clear_season();
         } else {
             //todo: id by name function
-            /*let id = sim.world.gen_player(sim.rng, divisions[6]);
+            let id = sim.world.gen_player(sim.rng, divisions[20]);
             println!("{}", id);
             sim.world.player_mut(id).team = None;
-            sim.world.hall.push(id);*/
+            sim.world.hall.push(id);
             let idx_a = sim.rng.index(args.teams);
             let mut idx_b = sim.rng.index(args.teams - 1);
             if idx_b >= idx_a {
                 idx_b += 1;
             }
             let team_a = divisions[idx_a];
-            let team_b = divisions[idx_b];
+            let team_b = divisions[0];
             //sim.world.player_mut(world.team(team_a).rotation[0]).mods.add(Mod::Earlbirds, ModLifetime::Permanent);
-            let mut game = Game::new(team_a, team_b, 0, None, sim.world, sim.rng); 
+            let mut game = Game::new(team_a, team_b, 0, Some(Weather::Coffee3), sim.world, sim.rng); 
             println!("{} at {}, {:?}",
                 sim.world.team(game.scoreboard.away_team.id).name,
                 sim.world.team(game.scoreboard.home_team.id).name,

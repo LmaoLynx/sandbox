@@ -179,7 +179,9 @@ pub enum Event {
     },
     Unscatter {
         unscattered: Vec<Uuid>,
-    }
+    },
+    UnderseaHome,
+    UnderseaAway
 }
 
 impl Event {
@@ -774,6 +776,12 @@ impl Event {
                         world.player_mut(player).mods.remove(Mod::Scattered);
                     }
                 }
+            },
+            Event::UnderseaHome => {
+                world.team_mut(game.scoreboard.home_team.id).mods.add(Mod::Overperforming, ModLifetime::Game);
+            }
+            Event::UnderseaAway => {
+                world.team_mut(game.scoreboard.away_team.id).mods.add(Mod::Overperforming, ModLifetime::Game);
             }
         }
         game.update_multiplier_data(world);
