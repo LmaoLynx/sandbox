@@ -232,7 +232,7 @@ fn do_pitch(world: &World, game: &Game, rng: &mut Rng) -> PitchOutcome {
         let is_fly = rng.next() < formulas::fly_threshold(batter, pitcher, ruleset, multiplier_data);
         if is_fly {
             let mut advancing_runners = Vec::new();
-            if game.outs == 2 {
+            if game.outs == game.scoreboard.batting_team().max_outs - 1 {
                 return PitchOutcome::Flyout {
                     fielder: fly_defender_id,
                     advancing_runners
@@ -255,7 +255,7 @@ fn do_pitch(world: &World, game: &Game, rng: &mut Rng) -> PitchOutcome {
 
         let ground_defender_id = game.pick_fielder(world, rng.next());
         let mut advancing_runners = Vec::new();
-        if game.outs == 2 {
+        if game.outs == game.scoreboard.batting_team().max_outs - 1 {
             return PitchOutcome::GroundOut {
                 fielder: ground_defender_id,
                 advancing_runners
@@ -265,7 +265,8 @@ fn do_pitch(world: &World, game: &Game, rng: &mut Rng) -> PitchOutcome {
         if !game.runners.empty() {
             let dp_roll = rng.next();
             if game.runners.occupied(0) {
-                if game.outs < 2 && dp_roll < formulas::double_play_threshold(batter, pitcher, out_defender, ruleset, multiplier_data) {
+                //did this actually work in actual blaseball?
+                if game.outs < game.scoreboard.batting_team().max_outs - 1 && dp_roll < formulas::double_play_threshold(batter, pitcher, out_defender, ruleset, multiplier_data) {
                     return PitchOutcome::DoublePlay {
                         runner_out: game.runners.pick_runner(rng.next())
                     };
@@ -393,7 +394,7 @@ impl Plugin for BatterStatePlugin {
 struct InningStatePlugin;
 impl Plugin for InningStatePlugin {
     fn tick(&self, game: &Game, _world: &World, _rng: &mut Rng) -> Option<Event> {
-        if game.outs < 3 {
+        if game.outs < game.scoreboard.batting_team().max_outs {
             return None;
         }
 
@@ -872,6 +873,26 @@ impl Plugin for InningEventPlugin {
         let activated = |event: &str| game.events.has(String::from(event), 1);
         //note: inning events happen after the inning switch
         //they also happen after batter up apparently (?)
+        let home_team = world.team(game.scoreboard.home_team.id);
+        let away_team = world.team(game.scoreboard.away_team.id);
+        let undersea_home = home_team.mods.has(Mod::Undersea) && game.scoreboard.home_team.score < 0.0;
+        let undersea_away = away_team.mods.has(Mod::Undersea) && game.scoreboard.away_team.score < 0.0;
+        //todo: ok but do we REALLY have to do this. do we REALLY have to.
+        //or is the event lookup system just that broken
+        if !activated("Undersea (true)") && undersea_home {
+            return Some(Event::Undersea { home: true })
+        }
+        if !activated("Undersea (false)") && undersea_away {
+            return Some(Event::Undersea { home: false })
+        }
+        let maintenance_home = home_team.mods.has(Mod::MaintenanceMode) && game.home_impaired;
+        let maintenance_away = away_team.mods.has(Mod::MaintenanceMode) && game.away_impaired;
+        if !activated("MaintenanceMode (true)") && maintenance_home {
+            return Some(Event::MaintenanceMode { home: true })
+        }
+        if !activated("MaintenanceMode (false)") && maintenance_away {
+            return Some(Event::MaintenanceMode { home: false })
+        }
         if !activated("TripleThreatDeactivation") && game.inning == 4 && game.scoreboard.top {
             let home_pitcher_deactivated = world.player(game.scoreboard.home_team.pitcher).mods.has(Mod::TripleThreat) && rng.next() < 0.333;
             let away_pitcher_deactivated = world.player(game.scoreboard.away_team.pitcher).mods.has(Mod::TripleThreat) && rng.next() < 0.333;
@@ -968,16 +989,6 @@ struct PregamePlugin;
 impl Plugin for PregamePlugin {
     fn tick(&self, game: &Game, world: &World, rng: &mut Rng) -> Option<Event> {
         let activated = |event: &str| game.events.has(String::from(event), -1);
-        let undersea_home = world.team(game.scoreboard.home_team.id).mods.has(Mod::Undersea) && game.scoreboard.home_team.score < 0.0;
-        let undersea_away = world.team(game.scoreboard.away_team.id).mods.has(Mod::Undersea) && game.scoreboard.away_team.score < 0.0;
-        //todo: ok but do we REALLY have to do this. do we REALLY have to.
-        //or is the event lookup system just that broken
-        if !activated("UnderseaHome") && undersea_home {
-            return Some(Event::UnderseaHome)
-        }
-        if !activated("UnderseaAway") && undersea_away {
-            return Some(Event::UnderseaAway)
-        }
         if !game.started {
             if let Weather::Coffee3 = game.weather {
                 if !activated("TripleThreat") {

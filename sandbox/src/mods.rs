@@ -77,6 +77,7 @@ pub enum Mod {
     HardBoiled,
     Undersea,
     BottomDweller,
+    MaintenanceMode,
     Ambush
 }
 

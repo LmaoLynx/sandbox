@@ -117,6 +117,9 @@ pub struct Game {
 
     pub runners: Baserunners,
 
+    pub home_impaired: bool,
+    pub away_impaired: bool,
+
     pub linescore_home: Vec<f64>, //for salmon purposes
     pub linescore_away: Vec<f64>, //the first element is the total score
 }
@@ -135,6 +138,7 @@ pub struct GameTeam {
     pub batter: Option<Uuid>,
     pub batter_index: usize,
     pub score: f64, // sigh
+    pub max_outs: i16,
 }
 
 //stealing this from Astrid
@@ -191,6 +195,7 @@ impl Game {
                     batter: None,
                     batter_index: 0,
                     score: if world.team(team_a).mods.has(Mod::HomeFieldAdvantage) { 1.0 } else { 0.0 },
+                    max_outs: 3
                 },
                 away_team: GameTeam {
                     id: team_b,
@@ -198,10 +203,13 @@ impl Game {
                     batter: None,
                     batter_index: 0,
                     score: 0.0,
+                    max_outs: 3
                 },
                 top: true,
             },
             runners: Baserunners::new(if world.team(team_b).mods.has(Mod::FifthBase) { 5 } else { 4 }),
+            home_impaired: false,
+            away_impaired: false,
             linescore_home: vec![if world.team(team_a).mods.has(Mod::HomeFieldAdvantage) { 1.0 } else { 0.0 }],
             linescore_away: vec![0.0],
         }
@@ -226,7 +234,7 @@ impl Game {
 
     //note that this is only for runs scored on a regular event
     fn score(&mut self, world: &mut World) {
-        if self.outs < 3 {
+        if self.outs < self.scoreboard.batting_team().max_outs {
             let mut runs_scored = 0.0;
             for runner in self.runners.iter() {
                 if runner.base >= self.runners.base_number - 1 {

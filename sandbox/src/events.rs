@@ -180,8 +180,14 @@ pub enum Event {
     Unscatter {
         unscattered: Vec<Uuid>,
     },
-    UnderseaHome,
-    UnderseaAway
+    #[strum(to_string="Undersea ({home})")]
+    Undersea {
+        home: bool
+    },
+    #[strum(to_string="MaintenanceMode ({home})")]
+    MaintenanceMode {
+        home: bool
+    }
 }
 
 impl Event {
@@ -409,6 +415,14 @@ impl Event {
                 let boosts: Vec<f64> = vec![coeff; 26];
                 let player = world.player_mut(target);
                 player.boost(&boosts);
+                if !yummy {
+                    let home = world.player(target).team.unwrap() == game.scoreboard.home_team.id;
+                    if home {
+                        game.home_impaired = true;
+                    } else {
+                        game.away_impaired = true;
+                    }
+                }
             },
             Event::Birds => {},
             Event::Feedback { target1, target2 } => {
@@ -523,6 +537,12 @@ impl Event {
                     }
                 }
                 target_mut.boost(&decreases);
+                let home = target_mut.team.unwrap() == game.scoreboard.home_team.id;
+                if home {
+                    game.home_impaired = true;
+                } else {
+                    game.away_impaired = true;
+                }
             },
             //todo: add win manipulation when we actually have wins
             Event::Sun2 { home_team } => {
@@ -605,6 +625,12 @@ impl Event {
             Event::Fireproof { target: _target } | Event::IffeyJr { target: _target } => {},
             Event::Soundproof { resists: _resists, tangled, ref decreases } => {
                 world.player_mut(tangled).boost(decreases);
+                let home = world.player(tangled).team.unwrap() == game.scoreboard.home_team.id;
+                if home {
+                    game.home_impaired = true;
+                } else {
+                    game.away_impaired = true;
+                }
             },
             Event::Reverberating { batter } => {
                 let bt = game.scoreboard.batting_team_mut();
@@ -777,11 +803,20 @@ impl Event {
                     }
                 }
             },
-            Event::UnderseaHome => {
-                world.team_mut(game.scoreboard.home_team.id).mods.add(Mod::Overperforming, ModLifetime::Game);
-            }
-            Event::UnderseaAway => {
-                world.team_mut(game.scoreboard.away_team.id).mods.add(Mod::Overperforming, ModLifetime::Game);
+            Event::Undersea { home } => {
+                let team = if home {
+                    game.scoreboard.home_team.id
+                } else {
+                    game.scoreboard.away_team.id
+                };
+                world.team_mut(team).mods.add(Mod::Overperforming, ModLifetime::Game);
+            },
+            Event::MaintenanceMode { home } => {
+                if home {
+                    game.scoreboard.home_team.max_outs = 4;
+                } else {
+                    game.scoreboard.away_team.max_outs = 4;
+                };
             }
         }
         game.update_multiplier_data(world);
