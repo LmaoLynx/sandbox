@@ -808,10 +808,29 @@ impl Plugin for WeatherPlugin {
                 }
             },
             Weather::BlackHole => {
-                if game.scoreboard.home_team.score > 9.99 {
-                    Some(Event::BlackHole { home_team: true })
-                } else if game.scoreboard.away_team.score > 9.99 {
-                    Some(Event::BlackHole { home_team: false })
+                if game.scoreboard.home_team.score > 4.99 { 
+                    let carcinized = if world.team(game.scoreboard.home_team.id).mods.has(Mod::Carcinization) {
+                        //this finds the max of a vec without cloning. I guess.
+                        Some(world.team(game.scoreboard.away_team.id).lineup
+                            .iter()
+                            .reduce(|acc, e| if world.player(*acc).player_rating(0) > world.player(*e).player_rating(0) { acc } else { e })
+                            .unwrap())
+                            .copied()
+                    } else {
+                        None
+                    };
+                    Some(Event::BlackHole { home_team: true, carcinized })
+                } else if game.scoreboard.away_team.score > 4.99 {
+                    let carcinized = if world.team(game.scoreboard.away_team.id).mods.has(Mod::Carcinization) {
+                        Some(world.team(game.scoreboard.home_team.id).lineup
+                            .iter()
+                            .reduce(|acc, e| if world.player(*acc).player_rating(0) > world.player(*e).player_rating(0) { acc } else { e })
+                            .unwrap())
+                            .copied()
+                    } else {
+                        None
+                    };
+                    Some(Event::BlackHole { home_team: false, carcinized })
                 } else {
                     None
                 }

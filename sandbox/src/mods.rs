@@ -78,6 +78,7 @@ pub enum Mod {
     Undersea,
     BottomDweller,
     MaintenanceMode,
+    Carcinization,
     Ambush
 }
 

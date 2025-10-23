@@ -99,7 +99,7 @@ fn main() {
 
     //edit mods and legendary items
     //world.team_name_mut(String::from("Hawai'i Fridays")).mods.add(Mod::FourthStrike, ModLifetime::Season);
-    //world.team_name_mut(String::from("Atlantis Georgias")).mods.add(Mod::Undersea, ModLifetime::Season);
+    //world.team_name_mut(String::from("Baltimore Crabs")).mods.add(Mod::Carcinization, ModLifetime::Permanent);
     //world.player_mut(world.team_name(String::from("Kansas City Breath Mints")).lineup[2]).mods.add(Mod::Flippers, ModLifetime::Permanent);
     //world.player_mut(world.team(team_a).lineup[0]).add_legendary_item(LegendaryItem::TheIffeyJr);
     //world.player_mut(world.team_name(String::from("Charleston Shoe Thieves")).rotation[0]).mods.add(Mod::Superyummy, ModLifetime::Permanent);
@@ -417,9 +417,9 @@ fn main() {
                 idx_b += 1;
             }
             let team_a = divisions[idx_a];
-            let team_b = divisions[0];
+            let team_b = divisions[18];
             //sim.world.player_mut(world.team(team_a).rotation[0]).mods.add(Mod::Earlbirds, ModLifetime::Permanent);
-            let mut game = Game::new(team_a, team_b, 0, Some(Weather::Coffee3), sim.world, sim.rng); 
+            let mut game = Game::new(team_a, team_b, 0, Some(Weather::BlackHole), sim.world, sim.rng); 
             println!("{} at {}, {:?}",
                 sim.world.team(game.scoreboard.away_team.id).name,
                 sim.world.team(game.scoreboard.home_team.id).name,

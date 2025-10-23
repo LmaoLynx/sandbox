@@ -88,6 +88,7 @@ pub enum Event {
     },
     BlackHole {
         home_team: bool,
+        carcinized: Option<Uuid>,
     },
     Salmon {
         home_runs_lost: bool,
@@ -562,20 +563,30 @@ impl Event {
                     }
                 }
             }
-            Event::BlackHole { home_team } => {
+            Event::BlackHole { home_team, carcinized } => {
                 if home_team {
-                    game.scoreboard.home_team.score -= 10.0;
+                    game.scoreboard.home_team.score -= 5.0;
                     if game.day > 98 {
                         world.team_mut(game.scoreboard.away_team.id).postseason_wins -= 1;
                     } else {
                         world.team_mut(game.scoreboard.away_team.id).wins -= 1;
                     }
+                    if carcinized.is_some() {
+                        let carc = carcinized.unwrap();
+                        world.team_mut(game.scoreboard.home_team.id).lineup.push(carc);
+                        world.team_mut(game.scoreboard.away_team.id).lineup.retain(|&b| b != carc);
+                    }
                 } else {
-                    game.scoreboard.away_team.score -= 10.0;
+                    game.scoreboard.away_team.score -= 5.0;
                     if game.day > 98 {
                         world.team_mut(game.scoreboard.home_team.id).postseason_wins -= 1;
                     } else {
                         world.team_mut(game.scoreboard.home_team.id).wins -= 1;
+                    }
+                    if carcinized.is_some() {
+                        let carc = carcinized.unwrap();
+                        world.team_mut(game.scoreboard.away_team.id).lineup.push(carc);
+                        world.team_mut(game.scoreboard.home_team.id).lineup.retain(|&b| b != carc);
                     }
                 }
             },
