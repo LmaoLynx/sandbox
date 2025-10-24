@@ -68,9 +68,14 @@ pub enum Mod {
     Perk,
     Elsewhere,
     Scattered,
+    #[strum(serialize="OVERUNDER")]
+    OverUnder,
+    #[strum(serialize="UNDEROVER")]
+    UnderOver,
     #[strum(serialize="SWIM_BLADDER")]
     Flippers,
     Earlbirds,
+    #[strum(serialize="LATE_TO_PARTY")]
     LateToTheParty,
     #[strum(serialize="WANDERER")]
     Roaming,

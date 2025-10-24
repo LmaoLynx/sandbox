@@ -181,6 +181,11 @@ pub enum Event {
     Unscatter {
         unscattered: Vec<Uuid>,
     },
+    #[strum(to_string="OverUnder ({on})")]
+    OverUnder {
+        on: bool,
+        players: Vec<Uuid>
+    },
     #[strum(to_string="Undersea ({home})")]
     Undersea {
         home: bool
@@ -828,6 +833,15 @@ impl Event {
                 } else {
                     game.scoreboard.away_team.max_outs = 4;
                 };
+            },
+            Event::OverUnder { on, ref players } => {
+                for &p in players.iter() {
+                    if on {
+                        world.player_mut(p).mods.add(Mod::OverUnder, ModLifetime::Game);
+                    } else {
+                        world.player_mut(p).mods.remove(Mod::OverUnder);
+                    }
+                }
             }
         }
         game.update_multiplier_data(world);
@@ -896,6 +910,17 @@ impl Events {
                 } else {
                     return false;
                 }
+            }
+        }
+        false
+    }
+    pub fn has_before(&self, s: String, other: String) -> bool {
+        let mut half_innings = 0i16;
+        for ev in self.events.iter().rev() {
+            if *ev == s {
+                return true;
+            } else if *ev == other {
+                return false;
             }
         }
         false

@@ -49,6 +49,7 @@ fn main() {
     //let mut rng = Rng::new(1923746321473263448, 2938897239474837483);
     
     //let mut rng = Rng::new(12933895067857275469, 10184511423779887981); //s12 seed
+    //let mut rng = Rng::new(2300985152363521761, 16070535759624553037); //s13 seed
 
     let mut rng = Rng::new(args.s1, args.s2);
     //let name_gen = NameGen::new();
@@ -98,9 +99,9 @@ fn main() {
         };
 
     //edit mods and legendary items
-    //world.team_name_mut(String::from("Hawai'i Fridays")).mods.add(Mod::FourthStrike, ModLifetime::Season);
+    //world.team_name_mut(divisions[2]).mods.add(Mod::FriendOfCrows, ModLifetime::Season);
     //world.team_name_mut(String::from("Baltimore Crabs")).mods.add(Mod::Carcinization, ModLifetime::Permanent);
-    //world.player_mut(world.team_name(String::from("Kansas City Breath Mints")).lineup[2]).mods.add(Mod::Flippers, ModLifetime::Permanent);
+    world.player_mut(world.team_name(String::from("Charleston Shoe Thieves")).lineup[7]).mods.add(Mod::OverUnder, ModLifetime::Permanent);
     //world.player_mut(world.team(team_a).lineup[0]).add_legendary_item(LegendaryItem::TheIffeyJr);
     //world.player_mut(world.team_name(String::from("Charleston Shoe Thieves")).rotation[0]).mods.add(Mod::Superyummy, ModLifetime::Permanent);
     
@@ -411,13 +412,13 @@ fn main() {
             println!("{}", id);
             sim.world.player_mut(id).team = None;
             sim.world.hall.push(id);
-            let idx_a = sim.rng.index(args.teams);
+            let idx_a = 20; //sim.rng.index(args.teams);
             let mut idx_b = sim.rng.index(args.teams - 1);
             if idx_b >= idx_a {
                 idx_b += 1;
             }
             let team_a = divisions[idx_a];
-            let team_b = divisions[18];
+            let team_b = divisions[idx_b];
             //sim.world.player_mut(world.team(team_a).rotation[0]).mods.add(Mod::Earlbirds, ModLifetime::Permanent);
             let mut game = Game::new(team_a, team_b, 0, Some(Weather::BlackHole), sim.world, sim.rng); 
             println!("{} at {}, {:?}",

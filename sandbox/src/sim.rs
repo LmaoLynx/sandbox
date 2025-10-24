@@ -808,7 +808,7 @@ impl Plugin for WeatherPlugin {
                 }
             },
             Weather::BlackHole => {
-                if game.scoreboard.home_team.score > 4.99 { 
+                if game.scoreboard.home_team.score > 9.99 { 
                     let carcinized = if world.team(game.scoreboard.home_team.id).mods.has(Mod::Carcinization) {
                         //this finds the max of a vec without cloning. I guess.
                         Some(world.team(game.scoreboard.away_team.id).lineup
@@ -820,7 +820,7 @@ impl Plugin for WeatherPlugin {
                         None
                     };
                     Some(Event::BlackHole { home_team: true, carcinized })
-                } else if game.scoreboard.away_team.score > 4.99 {
+                } else if game.scoreboard.away_team.score > 9.99 {
                     let carcinized = if world.team(game.scoreboard.away_team.id).mods.has(Mod::Carcinization) {
                         Some(world.team(game.scoreboard.home_team.id).lineup
                             .iter()
@@ -889,7 +889,7 @@ pub fn roll_random_boosts(rng: &mut Rng, base: f64, threshold: f64, exclude_pres
 struct InningEventPlugin;
 impl Plugin for InningEventPlugin {
     fn tick(&self, game: &Game, world: &World, rng: &mut Rng) -> Option<Event> {
-        let activated = |event: &str| game.events.has(String::from(event), 1);
+        let activated = |event: &str| game.events.has(String::from(event), -1);
         //note: inning events happen after the inning switch
         //they also happen after batter up apparently (?)
         let home_team = world.team(game.scoreboard.home_team.id);
@@ -904,8 +904,29 @@ impl Plugin for InningEventPlugin {
         if !activated("Undersea (false)") && undersea_away {
             return Some(Event::Undersea { home: false })
         }
+        let overunder = poll_for_mod(game, world, Mod::OverUnder, "current", false);
+        let overunder_on: Vec<Uuid> = overunder.iter().filter(|&&p| {
+            let home = world.player(p).team.unwrap() == game.scoreboard.home_team.id;
+            let overunder_score = if home { game.scoreboard.home_team.score > 4.99 } else { game.scoreboard.away_team.score > 4.99 };
+            return !world.player(p).mods.has(Mod::Underperforming) && overunder_score;
+        }).copied().collect();
+        let overunder_off: Vec<Uuid> = overunder.iter().filter(|&&p| {
+            let home = world.player(p).team.unwrap() == game.scoreboard.home_team.id;
+            let overunder_off_score = if home { game.scoreboard.home_team.score < 4.99 } else { game.scoreboard.away_team.score < 4.99 };
+            return world.player(p).mods.has(Mod::Underperforming) && overunder_off_score;
+        }).copied().collect();
+        println!("{:?}", overunder_on);
+        println!("{:?}", overunder_off);
+        if overunder_on.len() > 0 && !game.events.has_before(String::from("OverUnder (true)"), String::from("OverUnder(false)")) {
+            return Some(Event::OverUnder { on: true, players: overunder_on.clone() });
+        }
+        else if overunder_off.len() > 0 && game.events.has_before(String::from("OverUnder (true)"), String::from("OverUnder(false)")) {
+            return Some(Event::OverUnder { on: false, players: overunder_off.clone() });
+        }
         let maintenance_home = home_team.mods.has(Mod::MaintenanceMode) && game.home_impaired;
         let maintenance_away = away_team.mods.has(Mod::MaintenanceMode) && game.away_impaired;
+        //todo: iterating through game.events is probably slower as a first option 
+        //than checking the mods and a simple condition. Measure.
         if !activated("MaintenanceMode (true)") && maintenance_home {
             return Some(Event::MaintenanceMode { home: true })
         }
