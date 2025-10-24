@@ -186,6 +186,11 @@ pub enum Event {
         on: bool,
         players: Vec<Uuid>
     },
+    #[strum(to_string="UnderOver ({on})")]
+    UnderOver {
+        on: bool,
+        players: Vec<Uuid>
+    },
     #[strum(to_string="Undersea ({home})")]
     Undersea {
         home: bool
@@ -570,7 +575,7 @@ impl Event {
             }
             Event::BlackHole { home_team, carcinized } => {
                 if home_team {
-                    game.scoreboard.home_team.score -= 5.0;
+                    game.scoreboard.home_team.score -= 10.0;
                     if game.day > 98 {
                         world.team_mut(game.scoreboard.away_team.id).postseason_wins -= 1;
                     } else {
@@ -582,7 +587,7 @@ impl Event {
                         world.team_mut(game.scoreboard.away_team.id).lineup.retain(|&b| b != carc);
                     }
                 } else {
-                    game.scoreboard.away_team.score -= 5.0;
+                    game.scoreboard.away_team.score -= 10.0;
                     if game.day > 98 {
                         world.team_mut(game.scoreboard.home_team.id).postseason_wins -= 1;
                     } else {
@@ -819,6 +824,24 @@ impl Event {
                     }
                 }
             },
+            Event::OverUnder { on, ref players } => {
+                for &p in players.iter() {
+                    if on {
+                        world.player_mut(p).mods.add(Mod::Underperforming, ModLifetime::Game);
+                    } else {
+                        world.player_mut(p).mods.remove(Mod::Underperforming);
+                    }
+                }
+            },
+            Event::UnderOver { on, ref players } => {
+                for &p in players.iter() {
+                    if on {
+                        world.player_mut(p).mods.add(Mod::Overperforming, ModLifetime::Game);
+                    } else {
+                        world.player_mut(p).mods.remove(Mod::Overperforming);
+                    }
+                }
+            },
             Event::Undersea { home } => {
                 let team = if home {
                     game.scoreboard.home_team.id
@@ -833,15 +856,6 @@ impl Event {
                 } else {
                     game.scoreboard.away_team.max_outs = 4;
                 };
-            },
-            Event::OverUnder { on, ref players } => {
-                for &p in players.iter() {
-                    if on {
-                        world.player_mut(p).mods.add(Mod::OverUnder, ModLifetime::Game);
-                    } else {
-                        world.player_mut(p).mods.remove(Mod::OverUnder);
-                    }
-                }
             }
         }
         game.update_multiplier_data(world);

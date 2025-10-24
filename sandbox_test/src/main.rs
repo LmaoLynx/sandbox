@@ -101,7 +101,7 @@ fn main() {
     //edit mods and legendary items
     //world.team_name_mut(divisions[2]).mods.add(Mod::FriendOfCrows, ModLifetime::Season);
     //world.team_name_mut(String::from("Baltimore Crabs")).mods.add(Mod::Carcinization, ModLifetime::Permanent);
-    world.player_mut(world.team_name(String::from("Charleston Shoe Thieves")).lineup[7]).mods.add(Mod::OverUnder, ModLifetime::Permanent);
+    //world.player_mut(world.team_name(String::from("Chicago Firefighters")).lineup[8]).mods.add(Mod::UnderOver, ModLifetime::Permanent);
     //world.player_mut(world.team(team_a).lineup[0]).add_legendary_item(LegendaryItem::TheIffeyJr);
     //world.player_mut(world.team_name(String::from("Charleston Shoe Thieves")).rotation[0]).mods.add(Mod::Superyummy, ModLifetime::Permanent);
     
@@ -412,7 +412,7 @@ fn main() {
             println!("{}", id);
             sim.world.player_mut(id).team = None;
             sim.world.hall.push(id);
-            let idx_a = 20; //sim.rng.index(args.teams);
+            let idx_a = 2; //sim.rng.index(args.teams);
             let mut idx_b = sim.rng.index(args.teams - 1);
             if idx_b >= idx_a {
                 idx_b += 1;

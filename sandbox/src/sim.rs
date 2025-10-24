@@ -904,6 +904,7 @@ impl Plugin for InningEventPlugin {
         if !activated("Undersea (false)") && undersea_away {
             return Some(Event::Undersea { home: false })
         }
+
         let overunder = poll_for_mod(game, world, Mod::OverUnder, "current", false);
         let overunder_on: Vec<Uuid> = overunder.iter().filter(|&&p| {
             let home = world.player(p).team.unwrap() == game.scoreboard.home_team.id;
@@ -915,14 +916,31 @@ impl Plugin for InningEventPlugin {
             let overunder_off_score = if home { game.scoreboard.home_team.score < 4.99 } else { game.scoreboard.away_team.score < 4.99 };
             return world.player(p).mods.has(Mod::Underperforming) && overunder_off_score;
         }).copied().collect();
-        println!("{:?}", overunder_on);
-        println!("{:?}", overunder_off);
-        if overunder_on.len() > 0 && !game.events.has_before(String::from("OverUnder (true)"), String::from("OverUnder(false)")) {
+        let underover = poll_for_mod(game, world, Mod::UnderOver, "current", false);
+        let underover_on: Vec<Uuid> = underover.iter().filter(|&&p| {
+            let home = world.player(p).team.unwrap() == game.scoreboard.home_team.id;
+            let underover_score = if home { game.scoreboard.home_team.score < 4.99 } else { game.scoreboard.away_team.score < 4.99 };
+            return !world.player(p).mods.has(Mod::Overperforming) && underover_score;
+        }).copied().collect();
+        let underover_off: Vec<Uuid> = underover.iter().filter(|&&p| {
+            let home = world.player(p).team.unwrap() == game.scoreboard.home_team.id;
+            let underover_off_score = if home { game.scoreboard.home_team.score > 4.99 } else { game.scoreboard.away_team.score > 4.99 };
+            return world.player(p).mods.has(Mod::Overperforming) && underover_off_score;
+        }).copied().collect();
+        if underover_on.len() > 0 && !game.events.has_before(String::from("UnderOver (true)"), String::from("UnderOver (false)")) {
+            return Some(Event::UnderOver { on: true, players: underover_on.clone() });
+        }
+        if underover_off.len() > 0 && game.events.has_before(String::from("UnderOver (true)"), String::from("UnderOver (false)")) {
+            return Some(Event::UnderOver { on: false, players: underover_off.clone() });
+        }
+
+        if overunder_on.len() > 0 && !game.events.has_before(String::from("OverUnder (true)"), String::from("OverUnder (false)")) {
             return Some(Event::OverUnder { on: true, players: overunder_on.clone() });
         }
-        else if overunder_off.len() > 0 && game.events.has_before(String::from("OverUnder (true)"), String::from("OverUnder(false)")) {
+        else if overunder_off.len() > 0 && game.events.has_before(String::from("OverUnder (true)"), String::from("OverUnder (false)")) {
             return Some(Event::OverUnder { on: false, players: overunder_off.clone() });
         }
+
         let maintenance_home = home_team.mods.has(Mod::MaintenanceMode) && game.home_impaired;
         let maintenance_away = away_team.mods.has(Mod::MaintenanceMode) && game.away_impaired;
         //todo: iterating through game.events is probably slower as a first option 
