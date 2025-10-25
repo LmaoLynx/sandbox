@@ -46,7 +46,7 @@ pub fn divisions(season: u8) -> Option<ChronArray<ChronDivision>> {
     let string = format!("json/s{}divisions.json", season);
     let path = Path::new(&string);
     let cached = path.exists();
-    let ignore_cache = false;
+    let ignore_cache = true;
     if cached && !ignore_cache {
         let file = fs::read(path);
         if file.is_err() {
@@ -81,6 +81,8 @@ pub fn divisions(season: u8) -> Option<ChronArray<ChronDivision>> {
     }
     if season == 11 {
         result.items.retain(|item| item.validTo.is_some());
+    } else {
+        result.items.retain(|item| item.data.name.contains("ild"));
     }
 
     return Some(result);
@@ -92,7 +94,7 @@ pub fn hall(season: u8) -> Option<ChronHall> {
     let string = format!("json/s{}hall.json", season);
     let path = Path::new(&string);
     let cached = path.exists();
-    let ignore_cache = false;
+    let ignore_cache = true;
     if cached && !ignore_cache {
         let file = fs::read(path);
         if file.is_err() {
