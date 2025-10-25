@@ -430,12 +430,13 @@ impl ChronPlayer {
         Player {
             id: self.id,
             name: self.name,
+            swept_on: if self.permAttr.contains(&String::from("ELSEWHERE")) { Some(0) } else { None },
             mods: modconvert(&[self.permAttr, self.seasAttr, self.weekAttr, self.gameAttr]),
             legendary_item: None,
             team: self.leagueTeamId,
 
             feed: Events::new(),
-            swept_on: None,
+            //can't go below 0
             scattered_letters: 0,
 
             buoyancy: self.buoyancy,
